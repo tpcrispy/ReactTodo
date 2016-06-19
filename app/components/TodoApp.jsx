@@ -1,65 +1,67 @@
-import React, {Component} from 'react';
-import TodoList from 'TodoList';
-import AddTodos from 'AddTodos';
-import TodoSearch from 'TodoSearch';
-import uuid from 'node-uuid';
-import TodoAPI from 'TodoAPI';
+var React = require('react');
+var uuid = require('node-uuid');
+var moment = require('moment');
 
-class TodoApp extends Component {
-  constructor(props) {
-    super(props)
+var TodoList = require('TodoList');
+var AddTodo = require('AddTodo');
+var TodoSearch = require('TodoSearch');
+var TodoAPI = require('TodoAPI');
 
-    this.state ={
+var TodoApp = React.createClass({
+  getInitialState: function () {
+    return {
       showCompleted: false,
-      searchText: "",
+      searchText: '',
       todos: TodoAPI.getTodos()
     };
-  }
-  componentDidUpdate() {
+  },
+  componentDidUpdate: function () {
     TodoAPI.setTodos(this.state.todos);
-  }
-  handleAddTodo = (text)=>{
+  },
+  handleAddTodo: function (text) {
     this.setState({
       todos: [
         ...this.state.todos,
         {
           id: uuid(),
-          text:text,
-          completed: false
+          text: text,
+          completed: false,
+          createdAt: moment().unix(),
+          completedAt: undefined
         }
       ]
     });
-  }
-  handleToggle = (id) => {
+  },
+  handleToggle: function (id) {
     var updatedTodos = this.state.todos.map((todo) => {
       if (todo.id === id) {
         todo.completed = !todo.completed;
+        todo.completedAt = todo.completed ? moment().unix() : undefined;
       }
+
       return todo;
     });
 
-    this.setState({todos: updatedTodos})
-  }
-  handleSearch = (showCompleted, searchText) => {
+    this.setState({todos: updatedTodos});
+  },
+  handleSearch: function (showCompleted, searchText) {
     this.setState({
       showCompleted: showCompleted,
       searchText: searchText.toLowerCase()
     });
-  }
-
-  render() {
+  },
+  render: function () {
     var {todos, showCompleted, searchText} = this.state;
-    var filterTodos = TodoAPI.filterTodos(todos, showCompleted, searchText);
+    var filteredTodos = TodoAPI.filterTodos(todos, showCompleted, searchText);
 
     return (
       <div>
         <TodoSearch onSearch={this.handleSearch}/>
-        <TodoList todos={filterTodos} onToggle={this.handleToggle}/>
-        <AddTodos onAddTodo={this.handleAddTodo}/>
+        <TodoList todos={filteredTodos} onToggle={this.handleToggle}/>
+        <AddTodo onAddTodo={this.handleAddTodo}/>
       </div>
-    );
+    )
   }
+});
 
-}
-
-export default TodoApp;
+module.exports = TodoApp;
